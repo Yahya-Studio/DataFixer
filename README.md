@@ -271,7 +271,3 @@ uv run ruff format --check .
 Copyright (c) 2026 Yahya-Studio
 ```
 ---
-
-<div align="center">
-صُمم وطُوّر بأعلى معايير هندسة البرمجيات &bull; <strong>DataFixer 2026</strong>
-</div>
