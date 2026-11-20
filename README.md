@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✨ DataFixer | داتافيكسر
+# ✨ DataFixer | معقم البيانات
 ### منصة ذكية سحابية لتنظيف البيانات، وتحليل جودتها، ومعالجة أخطائها آلياً
 **A Modern, Production-Grade Data Quality Assurance & Smart Cleaning SaaS Platform**
 
