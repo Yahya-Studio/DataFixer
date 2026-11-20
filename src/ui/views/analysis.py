@@ -13,18 +13,35 @@ from src.ui.charts import (
     plot_top_categorical_values,
 )
 from src.ui.components import render_issues_table, render_quality_score_card
+from src.ui.icons import get_svg_icon
+
+
+def set_active_page(page_name: str):
+    """Callback to switch active page cleanly."""
+    st.session_state["active_page"] = page_name
 
 
 def render_analysis_view(session: DatasetSession):
     """Render the Data Quality Analysis & Profiling dashboard."""
-    st.markdown("## 🔬 تحليل جودة البيانات | Data Analysis")
+    st.markdown(
+        f"""
+        <div class="view-header">
+            {get_svg_icon("analysis", size=26, color="#818cf8")}
+            <h2>تحليل جودة البيانات | Data Analysis</h2>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.caption("فحص آلي معمّق لاكتشاف المشكلات الهيكلية والدلالية مع مؤشر جودة دقيق وقابل للتفسير.")
 
     if not session.has_data:
-        st.warning("⚠️ لا يوجد ملف بيانات نشط. يرجى رفع ملف أولاً من صفحة **Upload Dataset**.")
-        if st.button("الانتقال لرفع ملف", type="primary"):
-            st.session_state["active_page"] = "Upload Dataset"
-            st.rerun()
+        st.warning("لا يوجد ملف بيانات نشط. يرجى رفع ملف أولاً من صفحة رفع البيانات.")
+        st.button(
+            "الانتقال لرفع ملف",
+            type="primary",
+            on_click=set_active_page,
+            args=("Upload Dataset",),
+        )
         return
 
     df = session.current_df
@@ -87,6 +104,10 @@ def render_analysis_view(session: DatasetSession):
     with b_col1:
         st.write("هل ترغب في البدء في تصحيح وتنظيف المشكلات المكتشفة؟")
     with b_col2:
-        if st.button("🧹 الانتقال لأدوات التنظيف", type="primary", use_container_width=True):
-            st.session_state["active_page"] = "Data Cleaning"
-            st.rerun()
+        st.button(
+            "الانتقال لأدوات التنظيف (Cleaning)",
+            type="primary",
+            use_container_width=True,
+            on_click=set_active_page,
+            args=("Data Cleaning",),
+        )

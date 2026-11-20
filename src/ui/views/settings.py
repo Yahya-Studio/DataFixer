@@ -8,14 +8,23 @@ import streamlit as st
 
 from config.settings import config
 from src.core.state import DatasetSession
+from src.ui.icons import get_svg_icon
 
 
 def render_settings_view(session: DatasetSession):
     """Render the application configuration and settings panel."""
-    st.markdown("## ⚙️ الإعدادات وخيارات المعالجة | Settings")
+    st.markdown(
+        f"""
+        <div class="view-header">
+            {get_svg_icon("settings", size=26, color="#818cf8")}
+            <h2>الإعدادات والخيارات | Settings</h2>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.caption("تخصيص أوزان تقييم الجودة، وحدود كشف القيم الشاذة، وإدارة الجلسة الحالية.")
 
-    s_tab1, s_tab2, s_tab3 = st.tabs(["🎯 أوزان مؤشر الجودة", "📐 معايير القيم الشاذة", "ℹ️ معلومات النظام"])
+    s_tab1, s_tab2, s_tab3 = st.tabs(["أوزان مؤشر الجودة", "معايير القيم الشاذة", "معلومات النظام"])
 
     with s_tab1:
         st.markdown("### تخصيص أوزان حساب مؤشر الجودة (Quality Score Weights)")
@@ -102,7 +111,7 @@ def render_settings_view(session: DatasetSession):
 
         st.markdown("---")
         st.markdown("### إدارة الجلسة الحالية")
-        if st.button("🗑️ مسح الجلسة والبدء من جديد", type="secondary"):
+        if st.button("مسح الجلسة والبدء من جديد", type="secondary"):
             st.session_state.clear()
             st.success("تم مسح الجلسة.")
             st.rerun()

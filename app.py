@@ -37,6 +37,11 @@ def init_session() -> DatasetSession:
     return st.session_state["dataset_session"]
 
 
+def set_active_page(page_name: str):
+    """Callback to switch active page cleanly before widget instantiation."""
+    st.session_state["active_page"] = page_name
+
+
 def main():
     # Streamlit Page Configuration
     st.set_page_config(
@@ -55,7 +60,7 @@ def main():
     with st.sidebar:
         st.markdown(
             """
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding: 4px 8px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding: 4px 8px; direction: rtl;">
                 <div style="background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); color: white; font-weight: 800; font-size: 20px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);">
                     DF
                 </div>
@@ -68,40 +73,35 @@ def main():
             unsafe_allow_html=True,
         )
 
-        nav_options = [
-            "Dashboard",
-            "Upload Dataset",
-            "Data Analysis",
-            "Data Cleaning",
-            "Cleaning History",
-            "Reports & Export",
-            "Settings",
+        st.markdown('<div class="sidebar-section-title">التنقل في المنصة</div>', unsafe_allow_html=True)
+
+        nav_items = [
+            ("Dashboard", "لوحة التحكم (Dashboard)", "nav_btn_dashboard"),
+            ("Upload Dataset", "رفع البيانات (Upload)", "nav_btn_upload"),
+            ("Data Analysis", "تحليل الجودة (Analysis)", "nav_btn_analysis"),
+            ("Data Cleaning", "تنظيف البيانات (Cleaning)", "nav_btn_cleaning"),
+            ("Cleaning History", "سجل العمليات (History)", "nav_btn_history"),
+            ("Reports & Export", "التصدير والتقارير (Export)", "nav_btn_reports"),
+            ("Settings", "الإعدادات (Settings)", "nav_btn_settings"),
         ]
 
-        # Sync active_page with sidebar selection
-        if "sidebar_nav" not in st.session_state:
-            st.session_state["sidebar_nav"] = "Dashboard"
+        current_page = st.session_state.get("active_page", "Dashboard")
 
-        if st.session_state.get("active_page") and st.session_state["active_page"] in nav_options:
-            st.session_state["sidebar_nav"] = st.session_state["active_page"]
+        for page_key, label, btn_key in nav_items:
+            is_active = current_page == page_key
+            st.button(
+                label,
+                key=btn_key,
+                type="primary" if is_active else "secondary",
+                on_click=set_active_page,
+                args=(page_key,),
+                use_container_width=True,
+            )
 
-        selected_page = st.radio(
-            "التنقل في المنصة:",
-            nav_options,
-            format_func=lambda x: {
-                "Dashboard": "📊 لوحة التحكم (Dashboard)",
-                "Upload Dataset": "📁 رفع البيانات (Upload)",
-                "Data Analysis": "🔬 تحليل الجودة (Analysis)",
-                "Data Cleaning": "🧹 تنظيف البيانات (Cleaning)",
-                "Cleaning History": "📜 سجل العمليات (History)",
-                "Reports & Export": "📥 التصدير والتقارير (Export)",
-                "Settings": "⚙️ الإعدادات (Settings)",
-            }.get(x, x),
-            key="sidebar_nav",
+        st.markdown(
+            "<hr style='border: none; border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 20px 0;'>",
+            unsafe_allow_html=True,
         )
-        st.session_state["active_page"] = selected_page
-
-        st.markdown("---")
 
         # Sidebar Live Status Card
         if session.has_data:
@@ -109,10 +109,10 @@ def main():
             color = "#10b981" if score >= 85 else ("#f59e0b" if score >= 65 else "#ef4444")
             st.markdown(
                 f"""
-                <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px; margin-top: 10px;">
-                    <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">الملف النشط</div>
+                <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px; margin-top: 5px; direction: rtl; text-align: right;">
+                    <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">الملف النشط حالياً</div>
                     <div style="font-size: 14px; font-weight: 700; color: #f8fafc; margin: 4px 0; word-break: break-all;">
-                        📄 {session.filename}
+                        {session.filename}
                     </div>
                     <div style="font-size: 12px; color: #cbd5e1;">
                         {format_number(len(session.current_df))} صف &bull; {len(session.current_df.columns)} عمود
@@ -128,7 +128,7 @@ def main():
 
             # Quick undo shortcut in sidebar
             if session.history.can_undo():
-                if st.button("↩️ تراجع سريع", key="sidebar_quick_undo", use_container_width=True):
+                if st.button("تراجع عن آخر عملية (Undo)", key="sidebar_quick_undo", use_container_width=True):
                     rev = session.undo()
                     if rev:
                         st.toast(f"تم التراجع عن: {rev.name}")
@@ -138,7 +138,7 @@ def main():
 
         st.markdown(
             f"""
-            <div style="position: fixed; bottom: 15px; left: 15px; font-size: 11px; color: #64748b;">
+            <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.06); font-size: 11px; color: #64748b; text-align: center; direction: rtl;">
                 DataFixer v{config.version} &bull; Python 3.14
             </div>
             """,
@@ -146,7 +146,7 @@ def main():
         )
 
     # Route to selected page
-    page = st.session_state["active_page"]
+    page = st.session_state.get("active_page", "Dashboard")
     if page == "Dashboard":
         render_dashboard_view(session)
     elif page == "Upload Dataset":

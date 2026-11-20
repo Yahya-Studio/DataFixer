@@ -10,15 +10,24 @@ from src.reports.generator import build_report_data
 from src.reports.html_report import generate_html_report
 from src.reports.pdf_report import generate_pdf_report
 from src.ui.charts import plot_quality_comparison
+from src.ui.icons import get_svg_icon
 
 
 def render_reports_view(session: DatasetSession):
     """Render the Reports generation and Dataset Export studio."""
-    st.markdown("## 📥 التقارير والتصدير | Reports & Export")
+    st.markdown(
+        f"""
+        <div class="view-header">
+            {get_svg_icon("reports", size=26, color="#818cf8")}
+            <h2>التقارير والتصدير | Reports & Export</h2>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.caption("صدّر بياناتك المنظفة بصيغ متعددة ونزّل تقارير تدقيق الجودة المهنية الشاملة.")
 
     if not session.has_data:
-        st.warning("⚠️ لا يوجد ملف بيانات نشط. يرجى رفع ملف أولاً.")
+        st.warning("لا يوجد ملف بيانات نشط. يرجى رفع ملف أولاً.")
         return
 
     df = session.current_df
@@ -32,7 +41,7 @@ def render_reports_view(session: DatasetSession):
         st.plotly_chart(fig_comp, use_container_width=True)
 
     with c_summary:
-        st.markdown("#### 🏆 ملخص النتائج")
+        st.markdown("#### ملخص النتائج")
         st.write(f"- **الملف الأصلي:** `{session.filename}`")
         st.write(f"- **الجودة الابتدائية:** `{diff.get('score_original', 0.0):.1f} / 100`")
         st.write(
@@ -45,7 +54,7 @@ def render_reports_view(session: DatasetSession):
     st.markdown("---")
 
     # 2. Dataset Export Section
-    st.markdown("### 💾 أولاً: تصدير ملف البيانات بعد التنظيف")
+    st.markdown("### تصدير ملف البيانات بعد التنظيف")
     base_name = Path(session.filename).stem or "cleaned_dataset"
 
     e1, e2, e3 = st.columns(3)
@@ -62,7 +71,7 @@ def render_reports_view(session: DatasetSession):
         )
         csv_bytes = DatasetExporter.to_csv(df)
         st.download_button(
-            label="⬇️ تنزيل ملف CSV",
+            label="تنزيل ملف CSV",
             data=csv_bytes,
             file_name=f"{base_name}_cleaned.csv",
             mime="text/csv",
@@ -83,7 +92,7 @@ def render_reports_view(session: DatasetSession):
         )
         excel_bytes = DatasetExporter.to_excel(df)
         st.download_button(
-            label="⬇️ تنزيل ملف Excel",
+            label="تنزيل ملف Excel",
             data=excel_bytes,
             file_name=f"{base_name}_cleaned.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -103,7 +112,7 @@ def render_reports_view(session: DatasetSession):
         )
         json_bytes = DatasetExporter.to_json(df)
         st.download_button(
-            label="⬇️ تنزيل ملف JSON",
+            label="تنزيل ملف JSON",
             data=json_bytes,
             file_name=f"{base_name}_cleaned.json",
             mime="application/json",
@@ -113,7 +122,7 @@ def render_reports_view(session: DatasetSession):
     st.markdown("---")
 
     # 3. Comprehensive Audit Report Download (HTML & PDF)
-    st.markdown("### 📄 ثانياً: تقرير الجودة والتدقيق الشامل (Audit Report)")
+    st.markdown("### تقرير الجودة والتدقيق الشامل (Audit Report)")
     st.write(
         "يتضمن التقرير الشامل تفاصيل حجم البيانات، والمشكلات المكتشفة، وقائمة العمليات المنفذة، ودرجة الجودة النهائية."
     )
@@ -133,7 +142,7 @@ def render_reports_view(session: DatasetSession):
         )
         html_content = generate_html_report(report_data)
         st.download_button(
-            label="⬇️ تنزيل التقرير (HTML)",
+            label="تنزيل التقرير (HTML)",
             data=html_content.encode("utf-8"),
             file_name=f"DataFixer_Report_{base_name}.html",
             mime="text/html",
@@ -155,7 +164,7 @@ def render_reports_view(session: DatasetSession):
         try:
             pdf_bytes = generate_pdf_report(report_data)
             st.download_button(
-                label="⬇️ تنزيل التقرير (PDF)",
+                label="تنزيل التقرير (PDF)",
                 data=pdf_bytes,
                 file_name=f"DataFixer_Report_{base_name}.pdf",
                 mime="application/pdf",
@@ -165,5 +174,5 @@ def render_reports_view(session: DatasetSession):
             st.error(f"تعذر تجهيز ملف PDF: {e!s}")
 
     # In-App HTML Report Live Preview
-    with st.expander("👁️ استعراض مباشر لتقرير HTML داخل التطبيق"):
+    with st.expander("استعراض مباشر لتقرير HTML داخل التطبيق"):
         st.components.v1.html(html_content, height=650, scrolling=True)

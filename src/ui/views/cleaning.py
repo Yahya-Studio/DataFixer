@@ -20,15 +20,24 @@ from src.cleaning.text import (
 )
 from src.core.state import DatasetSession
 from src.ui.components import render_paginated_table
+from src.ui.icons import get_svg_icon
 
 
 def render_cleaning_view(session: DatasetSession):
     """Render the Data Cleaning studio interface."""
-    st.markdown("## 🧹 أدوات تنظيف ومعالجة البيانات | Data Cleaning")
+    st.markdown(
+        f"""
+        <div class="view-header">
+            {get_svg_icon("cleaning", size=26, color="#818cf8")}
+            <h2>أدوات تنظيف ومعالجة البيانات | Data Cleaning</h2>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.caption("نفّذ عمليات التنظيف والتصحيح بدقة مع تسجيل فوري في سجل العمليات وإمكانية التراجع الكامل.")
 
     if not session.has_data:
-        st.warning("⚠️ لا يوجد ملف بيانات نشط. يرجى رفع ملف أولاً من صفحة **Upload Dataset**.")
+        st.warning("لا يوجد ملف بيانات نشط. يرجى رفع ملف أولاً من صفحة رفع البيانات.")
         return
 
     df = session.current_df
@@ -44,7 +53,7 @@ def render_cleaning_view(session: DatasetSession):
         st.metric("مؤشر الجودة", f"{score_val:.1f} / 100")
     with h4:
         undo_available = session.history.can_undo()
-        if st.button("↩️ تراجع (Undo)", disabled=not undo_available, use_container_width=True):
+        if st.button("تراجع عن العملية (Undo)", disabled=not undo_available, use_container_width=True):
             reverted = session.undo()
             if reverted:
                 st.success(f"تم التراجع عن: {reverted.name}")
@@ -55,11 +64,11 @@ def render_cleaning_view(session: DatasetSession):
     # Cleaning Tabs
     tab_missing, tab_dup, tab_text, tab_cols, tab_nums_dates = st.tabs(
         [
-            "1️⃣ القيم المفقودة (Missing)",
-            "2️⃣ التكرارات (Duplicates)",
-            "3️⃣ تنظيف النصوص (Text)",
-            "4️⃣ الأعمدة والأنواع (Columns)",
-            "5️⃣ التواريخ والأرقام (Dates & Numbers)",
+            "القيم المفقودة (Missing)",
+            "معالجة التكرارات (Duplicates)",
+            "تنظيف النصوص (Text)",
+            "الأعمدة والأنواع (Columns)",
+            "التواريخ والأرقام (Dates & Numbers)",
         ]
     )
 
@@ -69,7 +78,7 @@ def render_cleaning_view(session: DatasetSession):
         c1, c2 = st.columns(2)
 
         with c1:
-            st.markdown("##### 🗑️ حذف الصفوف التي تحتوي على قيم مفقودة")
+            st.markdown("##### حذف الصفوف التي تحتوي على قيم مفقودة")
             how_choice = st.radio(
                 "شرط الحذف:",
                 ["حذف الصف إذا احتوى على أي قيمة فارغة (Any)", "حذف الصف فقط إذا كانت كل قيمه فارغة (All)"],
@@ -106,7 +115,7 @@ def render_cleaning_view(session: DatasetSession):
                     st.info("لا توجد صفوف فارغة مطابقة للشرط.")
 
         with c2:
-            st.markdown("##### ✏️ تعويض واستبدال القيم المفقودة (Imputation)")
+            st.markdown("##### تعويض واستبدال القيم المفقودة (Imputation)")
             fill_cols = st.multiselect(
                 "اختر الأعمدة المراد تعويض قيمها الفارغة:", list(df.columns), key="fill_null_cols"
             )
@@ -197,7 +206,7 @@ def render_cleaning_view(session: DatasetSession):
 
         t_col1, t_col2 = st.columns(2)
         with t_col1:
-            st.markdown("##### ✂️ إزالة المسافات الزائدة (Trim & Normalize)")
+            st.markdown("##### إزالة المسافات الزائدة (Trim & Normalize)")
             trim_cols = st.multiselect("الأعمدة النصية المستهدفة:", str_cols, default=str_cols, key="trim_cols")
             normalize_inner = st.checkbox(
                 "توحيد المسافات المتعددة الداخلية إلى مسافة واحدة", value=True, key="norm_inner"
@@ -217,7 +226,7 @@ def render_cleaning_view(session: DatasetSession):
                 st.success(f"تم تنظيف {cells_mod} خلية.")
                 st.rerun()
 
-            st.markdown("##### 🔠 توحيد حالة الأحرف (Case Normalization)")
+            st.markdown("##### توحيد حالة الأحرف (Case Normalization)")
             case_cols = st.multiselect("أعمدة تغيير حالة الأحرف:", str_cols, key="case_cols")
             case_type = st.selectbox(
                 "الحالة المرغوبة:",
@@ -241,7 +250,7 @@ def render_cleaning_view(session: DatasetSession):
                 st.rerun()
 
         with t_col2:
-            st.markdown("##### 🔍 البحث والاستبدال (Find & Replace)")
+            st.markdown("##### البحث والاستبدال (Find & Replace)")
             rep_cols = st.multiselect("الأعمدة المستهدفة للاستبدال:", list(df.columns), key="rep_cols")
             find_str = st.text_input("النص المراد البحث عنه:", key="find_str_val")
             replace_str = st.text_input("النص البديل:", key="replace_str_val")
@@ -274,7 +283,7 @@ def render_cleaning_view(session: DatasetSession):
 
         c_op1, c_op2 = st.columns(2)
         with c_op1:
-            st.markdown("##### 🏷️ توحيد وتسمية الأعمدة")
+            st.markdown("##### توحيد وتسمية الأعمدة")
             norm_style = st.selectbox(
                 "نمط التسمية القياسي:",
                 ["snake_case (مثال: full_name)", "lowercase (أحرف صغيرة)", "UPPERCASE (أحرف كبيرة)", "camelCase"],
@@ -294,7 +303,7 @@ def render_cleaning_view(session: DatasetSession):
                 st.success(f"تم توحيد أسماء {cols_mod} أعمدة.")
                 st.rerun()
 
-            st.markdown("##### ✏️ إعادة تسمية عمود يدوي")
+            st.markdown("##### إعادة تسمية عمود يدوي")
             target_ren_col = st.selectbox("اختر العمود المراد تعديل اسمه:", list(df.columns), key="sel_ren_col")
             new_ren_name = st.text_input("الاسم الجديد:", value=target_ren_col, key="new_ren_name_val")
             if st.button("تحديث اسم العمود", key="btn_ren_single"):
@@ -311,7 +320,7 @@ def render_cleaning_view(session: DatasetSession):
                     st.rerun()
 
         with c_op2:
-            st.markdown("##### 🗑️ حذف الأعمدة غير المطلوبة")
+            st.markdown("##### حذف الأعمدة غير المطلوبة")
             empty_cols_detected = [c for c in df.columns if df[c].isna().all()]
             if empty_cols_detected:
                 st.warning(f"تم اكتشاف أعمدة فارغة بالكامل: {', '.join(empty_cols_detected)}")
@@ -340,7 +349,7 @@ def render_cleaning_view(session: DatasetSession):
                 st.success(f"تم حذف {dropped_cnt} أعمدة.")
                 st.rerun()
 
-            st.markdown("##### 🔄 تحويل نوع البيانات (Data Type Casting)")
+            st.markdown("##### تحويل نوع البيانات (Data Type Casting)")
             cast_col = st.selectbox("العمود المراد تحويل نوعه:", list(df.columns), key="cast_col_sel")
             cast_type_choice = st.selectbox(
                 "النوع الجديد المستهدف:",
@@ -375,7 +384,7 @@ def render_cleaning_view(session: DatasetSession):
 
         d_col1, d_col2 = st.columns(2)
         with d_col1:
-            st.markdown("##### 📅 توحيد صيغ التواريخ")
+            st.markdown("##### توحيد صيغ التواريخ")
             date_candidates = list(df.columns)
             selected_date_cols = st.multiselect("اختر أعمدة التواريخ:", date_candidates, key="date_cols_sel")
             target_date_format = st.selectbox(
@@ -400,7 +409,7 @@ def render_cleaning_view(session: DatasetSession):
                 st.rerun()
 
         with d_col2:
-            st.markdown("##### 📈 التعامل مع القيم الشاذة (Outliers)")
+            st.markdown("##### التعامل مع القيم الشاذة (Outliers)")
             numeric_cols = list(df.select_dtypes(include=["number"]).columns)
             if not numeric_cols:
                 st.info("لا توجد أعمدة رقمية حالياً. يمكنك تحويل النصوص الرقمية لأرقام أولاً من تبويب الأعمدة.")

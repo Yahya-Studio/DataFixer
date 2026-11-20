@@ -1,4 +1,4 @@
-"""Dashboard View: Overview metrics and direct upload workflow."""
+"""Dashboard View: Overview metrics, SaaS onboarding, and direct upload workflow."""
 
 import streamlit as st
 
@@ -8,24 +8,64 @@ from src.ui.icons import get_svg_icon
 from src.utils.formatting import format_bytes, format_number
 
 
+def set_active_page(page_name: str):
+    """Callback to switch active page cleanly."""
+    st.session_state["active_page"] = page_name
+
+
 def render_dashboard_view(session: DatasetSession):
     """Render the SaaS Dashboard overview."""
-    st.markdown("## 📊 لوحة التحكم | Dashboard")
-    st.caption("نظرة عامة سريعة على حالة ملف البيانات وجودته والعمليات المنجزة.")
+    st.markdown(
+        f"""
+        <div class="view-header">
+            {get_svg_icon("dashboard", size=26, color="#818cf8")}
+            <h2>لوحة التحكم | Dashboard</h2>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.caption("نظرة عامة على حالة ملف البيانات، وجودته، والمشكلات المعالجة.")
 
     if not session.has_data:
-        # Empty state with single clean call-to-action
-        st.info(
-            "👋 مرحباً بك في **DataFixer**! لم يتم رفع أي ملف بيانات حتى الآن. ابدأ برفع ملف البيانات لفحص جودته وتنظيفه."
+        # Informative onboarding card
+        st.markdown(
+            f"""
+            <div class="saas-card" style="padding: 32px 24px; margin-top: 15px;">
+                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 15px;">
+                    <div style="background: rgba(99, 102, 241, 0.15); padding: 12px; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.3);">
+                        {get_svg_icon("upload", size=32, color="#818cf8")}
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; color: #f8fafc; font-size: 1.35rem; font-weight: 700;">مرحباً بك في منصة DataFixer</h3>
+                        <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 0.9rem;">المنصة الذكية المتكاملة لتحليل جودة البيانات واكتشاف العيوب ومعالجتها آلياً.</p>
+                    </div>
+                </div>
+                <div style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.8; margin-bottom: 20px;">
+                    تبدأ دورة عمل DataFixer برفع ملف بياناتك (يدعم <strong>CSV</strong>، <strong>Excel XLSX/XLS</strong>، و <strong>JSON</strong>). يقوم النظام بفحص شامل لاكتشاف المشكلات الهيكلية والدلالية، واحتساب مؤشر الجودة، وتمكينك من تنظيف البيانات مع إمكانية التراجع الكامل (Undo / Redo)، وتصدير النتائج والتقارير الرسمية.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
         st.markdown(
-            f"""
-            <div class="saas-card" style="padding: 35px 25px; text-align: center;">
-                <div style="margin-bottom: 12px;">{get_svg_icon("upload", size=42, color="#6366f1")}</div>
-                <div class="card-value" style="font-size: 1.6rem; margin-bottom: 8px;">ابدأ العمل مع DataFixer</div>
-                <div class="card-subtitle" style="font-size: 0.95rem; max-width: 600px; margin: 0 auto 20px auto;">
-                    ارفع ملفات CSV, Excel (XLSX, XLS), أو JSON لاكتشاف المشكلات الهيكلية والدلالية تلقائياً وتنظيفها بسهولة.
+            """
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 25px;">
+                <div class="saas-card" style="padding: 16px;">
+                    <div style="font-weight: 700; color: #818cf8; margin-bottom: 4px;">1. رفع البيانات</div>
+                    <div style="font-size: 0.84rem; color: #94a3b8;">دعم الترميزات العربية، الفواصل المتعددة، وتحديد أوراق العمل.</div>
+                </div>
+                <div class="saas-card" style="padding: 16px;">
+                    <div style="font-weight: 700; color: #818cf8; margin-bottom: 4px;">2. الفحص الذكي</div>
+                    <div style="font-size: 0.84rem; color: #94a3b8;">اكتشاف 11 عيباً هيكلياً واحتساب مؤشر الجودة الشفاف (0 - 100).</div>
+                </div>
+                <div class="saas-card" style="padding: 16px;">
+                    <div style="font-weight: 700; color: #818cf8; margin-bottom: 4px;">3. استوديو التنظيف</div>
+                    <div style="font-size: 0.84rem; color: #94a3b8;">معالجة الفراغات، التكرارات، النصوص، التواريخ، والشواذ.</div>
+                </div>
+                <div class="saas-card" style="padding: 16px;">
+                    <div style="font-weight: 700; color: #818cf8; margin-bottom: 4px;">4. التقارير والتصدير</div>
+                    <div style="font-size: 0.84rem; color: #94a3b8;">تصدير CSV, Excel, JSON وتوليد تقارير تدقيق HTML و PDF.</div>
                 </div>
             </div>
             """,
@@ -34,10 +74,13 @@ def render_dashboard_view(session: DatasetSession):
 
         _, b_c2, _ = st.columns([1, 2, 1])
         with b_c2:
-            if st.button("🚀 رفع ملف بيانات جديد (Upload Dataset)", use_container_width=True, type="primary"):
-                st.session_state["sidebar_nav"] = "Upload Dataset"
-                st.session_state["active_page"] = "Upload Dataset"
-                st.rerun()
+            st.button(
+                "الانتقال إلى صفحة رفع البيانات (Upload Dataset)",
+                type="primary",
+                use_container_width=True,
+                on_click=set_active_page,
+                args=("Upload Dataset",),
+            )
         return
 
     # Active dataset state
@@ -86,7 +129,7 @@ def render_dashboard_view(session: DatasetSession):
     col_left, col_right = st.columns([3, 2])
 
     with col_left:
-        st.subheader("📋 ملخص التغييرات والمقارنة")
+        st.subheader("ملخص التغييرات والمقارنة")
         st.write(
             f"- **الصفوف:** من `{diff.get('rows_original', 0):,}` إلى `{diff.get('rows_current', 0):,}` "
             f"({diff.get('rows_diff', 0):+d} صف)"
@@ -101,18 +144,23 @@ def render_dashboard_view(session: DatasetSession):
         st.write(f"- **المشاكل المتبقية بحاجة لمعالجة:** `{len(session.current_issues)}` مشكلة.")
 
     with col_right:
-        st.subheader("⚡ إجراءات سريعة")
-        if st.button("🔬 فحص تفاصيل جودة البيانات", use_container_width=True):
-            st.session_state["sidebar_nav"] = "Data Analysis"
-            st.session_state["active_page"] = "Data Analysis"
-            st.rerun()
-
-        if st.button("🧹 البدء في تنظيف البيانات", use_container_width=True, type="primary"):
-            st.session_state["sidebar_nav"] = "Data Cleaning"
-            st.session_state["active_page"] = "Data Cleaning"
-            st.rerun()
-
-        if st.button("📥 تصدير البيانات والتقرير", use_container_width=True):
-            st.session_state["sidebar_nav"] = "Reports & Export"
-            st.session_state["active_page"] = "Reports & Export"
-            st.rerun()
+        st.subheader("إجراءات سريعة")
+        st.button(
+            "فحص تفاصيل جودة البيانات",
+            use_container_width=True,
+            on_click=set_active_page,
+            args=("Data Analysis",),
+        )
+        st.button(
+            "البدء في تنظيف البيانات",
+            type="primary",
+            use_container_width=True,
+            on_click=set_active_page,
+            args=("Data Cleaning",),
+        )
+        st.button(
+            "تصدير البيانات والتقرير",
+            use_container_width=True,
+            on_click=set_active_page,
+            args=("Reports & Export",),
+        )

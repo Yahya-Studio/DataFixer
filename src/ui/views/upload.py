@@ -8,13 +8,22 @@ from config.settings import config
 from src.core.state import DatasetSession
 from src.io.loader import DataLoaderError, DatasetLoader
 from src.ui.components import render_paginated_table
+from src.ui.icons import get_svg_icon
 from src.utils.formatting import format_bytes, format_number
 from src.utils.security import SecurityValidationError
 
 
 def render_upload_view(session: DatasetSession):
     """Render the Upload & Dataset Ingestion interface."""
-    st.markdown("## 📁 رفع وإدارة ملفات البيانات | Upload Dataset")
+    st.markdown(
+        f"""
+        <div class="view-header">
+            {get_svg_icon("upload", size=26, color="#818cf8")}
+            <h2>رفع وإدارة البيانات | Upload Dataset</h2>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.caption("ارفع ملف البيانات لاكتشاف المشكلات وتحليل جودته وتنظيفه.")
 
     uploaded_file = st.file_uploader(
@@ -88,7 +97,6 @@ def render_upload_view(session: DatasetSession):
                     )
                     session.set_dataset(df, meta)
                     st.success(f"تم تحميل الملف '{meta['filename']}' بنجاح!")
-                    st.session_state["sidebar_nav"] = "Data Analysis"
                     st.session_state["active_page"] = "Data Analysis"
                     st.rerun()
                 except (SecurityValidationError, DataLoaderError) as e:
@@ -99,7 +107,7 @@ def render_upload_view(session: DatasetSession):
     # Active dataset preview with full pagination (No 15-row limit)
     if session.has_data:
         st.markdown("---")
-        st.markdown("### 👁️ استعراض بيانات الملف النشط")
+        st.markdown("### استعراض بيانات الملف النشط")
 
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("اسم الملف", session.filename)

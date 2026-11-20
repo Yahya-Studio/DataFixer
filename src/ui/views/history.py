@@ -4,16 +4,25 @@ import streamlit as st
 
 from src.core.state import DatasetSession
 from src.ui.components import render_diff_view
+from src.ui.icons import get_svg_icon
 from src.utils.formatting import format_number
 
 
 def render_history_view(session: DatasetSession):
     """Render the audit trail and version management interface."""
-    st.markdown("## 📜 سجل العمليات والتراجع | Cleaning History")
+    st.markdown(
+        f"""
+        <div class="view-header">
+            {get_svg_icon("history", size=26, color="#818cf8")}
+            <h2>سجل العمليات والتراجع | Cleaning History</h2>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.caption("تتبع مسار كل عملية تنظيف نُفذت، مع إمكانية التراجع خطوة بخطوة أو إعادة تطبيق العمليات.")
 
     if not session.has_data:
-        st.warning("⚠️ لا يوجد ملف بيانات نشط. يرجى رفع ملف أولاً.")
+        st.warning("لا يوجد ملف بيانات نشط. يرجى رفع ملف أولاً.")
         return
 
     actions = session.history.get_actions()
@@ -24,25 +33,25 @@ def render_history_view(session: DatasetSession):
     # Toolbar: Undo, Redo, Reset to Original
     c1, c2, c3 = st.columns([1, 1, 2])
     with c1:
-        if st.button("↩️ تراجع (Undo)", disabled=not can_undo, use_container_width=True, type="secondary"):
+        if st.button("تراجع (Undo)", disabled=not can_undo, use_container_width=True, type="secondary"):
             rev = session.undo()
             if rev:
                 st.success(f"تم التراجع عن: {rev.name}")
                 st.rerun()
 
     with c2:
-        if st.button("↪️ إعادة (Redo)", disabled=not can_redo, use_container_width=True, type="secondary"):
+        if st.button("إعادة (Redo)", disabled=not can_redo, use_container_width=True, type="secondary"):
             redone = session.redo()
             if redone:
                 st.success(f"تمت إعادة تطبيق: {redone.name}")
                 st.rerun()
 
     with c3:
-        if st.button("🔄 إعادة ضبط للنسخة الأصلية بالكامل", type="secondary", use_container_width=True):
+        if st.button("استعادة الملف الأصلي بالكامل", type="secondary", use_container_width=True):
             st.session_state["confirm_reset"] = True
 
     if st.session_state.get("confirm_reset", False):
-        st.warning("⚠️ هل أنت متأكد من رغبتك في إلغاء كافة العمليات والرجوع إلى الملف الأصلي؟")
+        st.warning("هل أنت متأكد من رغبتك في إلغاء كافة العمليات والرجوع إلى الملف الأصلي؟")
         co1, co2 = st.columns(2)
         with co1:
             if st.button("نعم، استعد الملف الأصلي", type="primary", use_container_width=True):
@@ -65,9 +74,9 @@ def render_history_view(session: DatasetSession):
     m4.metric("تغير مؤشر الجودة", f"{diff.get('score_diff', 0):+0.1f} نقطة")
 
     # Audit Trail Table
-    st.markdown("### 📋 جدول الإجراءات المسجلة (Audit Trail)")
+    st.markdown("### جدول الإجراءات المسجلة (Audit Trail)")
     if not actions:
-        st.info("لم يتم تسجيل أي عمليات تنظيف حتى الآن. ابدأ بتنظيف البيانات من صفحة **Data Cleaning**.")
+        st.info("لم يتم تسجيل أي عمليات تنظيف حتى الآن. ابدأ بتنظيف البيانات من صفحة تنظيف البيانات.")
     else:
         log_rows = []
         for i, a in enumerate(actions, 1):
@@ -87,5 +96,5 @@ def render_history_view(session: DatasetSession):
 
     # Before vs After Comparator
     st.markdown("---")
-    st.markdown("### 🔍 مقارنة البيانات قبل وبعد")
+    st.markdown("### مقارنة البيانات قبل وبعد المعالجة")
     render_diff_view(session.original_df, session.current_df)
